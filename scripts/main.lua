@@ -5,12 +5,9 @@ function _init()
     width=128
     height=64
 
-    -- list of entities
-    entities={}
-
     -- player
-    player=entity:new({ x = 1, y = 1, sprite = 0})
-    player.attacked=false
+    player = entity:new({ x = 1, y = 1, sprite = 0})
+    --player.attacked=false
 
     -- flags
     flags={}
@@ -20,11 +17,10 @@ function _init()
     cam={}
     cam.x=0
     cam.y=0
-
+    -- vars
     pbtn=0
     no=0
     frame=0
-
     -- iterate through map and find entities
     for x=0,127 do
         for y=0,63 do
@@ -43,20 +39,12 @@ function _draw()
     cls()
     -- draw map
     map(cam.x,cam.y)
-    -- draw player
-    --draw(player)
-    player:draw()
     -- draw entities
     for entity in all(entities) do entity:draw() end
     -- draw gui
-    --print("tst:" .. dist(entities[3], player),0,128-8*8)
-    --print("ani:" .. frame,0,128-8*7)
     print("no: " .. no,0,128-8*3)
     print("p.x:" .. player.x,0,128-8*2)
     print("p.y:" .. player.y,0,128-8*1)
-    --print("c.x:" .. cam.x,0,128-8*3)
-    --print("c.y:" ..cam.y,0,128-8*2)
-    --print("btn:" .. pbtn,0,128-8*1)
 end
 
 -- handle input
@@ -108,10 +96,6 @@ function move_towards_player(a)
     end
 end
 
-function dist(a,b)
-    return sqrt((b.x-a.x)^2 + (b.y-a.y)^2)
-end
-
 function attack(a,b)
     player.attacked=true
 end
@@ -153,7 +137,12 @@ end
 -- spawn entity
 function spawn(s,x,y)
     mset(x,y,empty)
-    add(entities,entity:new({sprite=s,x=x,y=y}))
+
+    if (s == 20) then
+        enemy:new({sprite=s,x=x,y=y, move_random = true})
+    else
+        entity:new({sprite=s,x=x,y=y})
+    end
 end
 
 
@@ -172,20 +161,23 @@ class = setmetatable({
 }, {__index=_ENV})
 
 -- entity
+entities={}
 entity = class:new({
     x = 0,
     y = 0,
     sprite = 0,
+    attacked = false,
 
     new = function(self,tbl)
         tbl=tbl or {}
         setmetatable(tbl,{
             __index=self
         })
+        add(entities,tbl)
         return tbl
     end,
 
-    update = function(_ENV)
+    update = function(self)
     end,
 
     draw = function(_ENV)
@@ -197,29 +189,24 @@ entity = class:new({
 
 -- enemy
 enemy = entity:new({
-    attacked = false,
-    hostile = false,
-    ranged = false,
+    --hostile = false,
+    --ranged = false,
     move_random = false,
-    --[[
+    update = function(self)
+        if (self.move_random) move_random(self)
+        --[[
         if (self.hostile) then
             if (self.ranged) then
                 -- ...
             else
-                if (dist(self,player) <= 1) then
-                    attack(self,player)
+                if (dist(self.player) <= 1) then
+                    attack(self.player)
                 else
                     move_towards_player(self)
                 end
             end
         end
-    ]]--
-})
+        ]]--
+    end,
 
---[[
-function draw(self)
-    if (self.x >= cam.x and self.x < cam.x+16 and self.y >= cam.y and self.y < cam.y+16) then
-        spr(self.attacked and (frame == 0 and self.sprite+2 or empty) or self.sprite+frame,8*(self.x-cam.x),8*(self.y-cam.y))
-    end
-end
-]]--
+})
