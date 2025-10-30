@@ -21,6 +21,7 @@ object = {
 entity = object:inherit({
     class="entity",
     entities={},
+    num=0,
     name="unknown",
     x=0,
     y=0,
@@ -39,6 +40,8 @@ entity = object:inherit({
     -- constructor
     new = function(self, table)
         local new_entity = self:inherit(table)
+        entity.num=entity.num+1
+        new_entity["id"] = entity.num
         new_entity["hp"] = new_entity.max_hp
         new_entity["prev_x"] = new_entity.x
         new_entity["prev_y"] = new_entity.y
@@ -52,13 +55,17 @@ entity = object:inherit({
             self.attacked = false
             if (self.dead and (turn-self.dhp_turn) > timer_grave) del(entity.entities, self)
         end
-        if (self.dead) return false
-        return true
+        return (not self.dead and self:in_frame())
+    end,
+
+    -- check if entity is on screen
+    in_frame = function(self)
+        return (self.x >= cam_x and self.x < cam_x+16 and self.y >= cam_y and self.y < cam_y+16-ui_h)
     end,
 
     -- draw entity
     draw = function(self)
-        if (self.x >= cam_x and self.x < cam_x+16 and self.y >= cam_y and self.y < cam_y+16) then
+        if (self:in_frame()) then
             sprite = self.sprite+frame*16
             -- dead
             if (self.dead) then
@@ -67,10 +74,10 @@ entity = object:inherit({
             -- under attack
             elseif (self.attacked and frame == 1) then
                 sprite = sprites.void
-                print(self.dhp,8*(self.x-cam_x)+4-str_width(self.dhp)*0.5,8*(self.y-cam_y)+1,self.dhp<0 and 8 or 10)
+                print(self.dhp,pos_to_screen(self).x+4-str_width(self.dhp)*0.5,pos_to_screen(self).y+1,self.dhp<0 and 8 or 10)
             end
             -- render sprite and overlay
-            spr(sprite,8*(self.x-cam_x),8*(self.y-cam_y))
+            spr(sprite,pos_to_screen(self).x,pos_to_screen(self).y)
         end
     end,
 
@@ -131,7 +138,7 @@ entity = object:inherit({
 
     -- take damage
     take_dmg = function(self,dmg)
-        if(self == player) ui:flash()
+        if(self == player) draw:flash()
         self.attacked = true
         self.dhp_turn=turn
         self.dhp=dmg*-1

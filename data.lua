@@ -11,7 +11,7 @@ data = {
 
         [18] = {
             class = "npc",
-            name = "dino",
+            name = "dinosaur",
         },
 
         [19] = {
