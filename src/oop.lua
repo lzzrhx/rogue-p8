@@ -4,6 +4,10 @@
 
 object = {
 
+    -- static vars
+    class="object",
+    parent_class=nil,
+
     -- metatable setup
     inherit = function(self, table)
         table=table or {}
@@ -25,15 +29,19 @@ entity = object:inherit({
     
     -- static vars
     class="entity",
+    parent_class=object.class,
     entities={},
     num=0,
 
     -- vars
-    name="unknown",
+    name=nil,
     x=0,
     y=0,
     sprite=0,
     collision=true,
+    interactable=true,
+    interact_dist=1,
+    interact_text="interact",
 
     -- constructor
     new = function(self, table)
@@ -61,6 +69,10 @@ entity = object:inherit({
             sprite = self.sprite
             spr(sprite,pos_to_screen(self).x,pos_to_screen(self).y)
         end
+    end,
+
+    -- interact action
+    interact = function(self)
     end,
 
     -- get entity at coordinate
@@ -107,6 +119,10 @@ entity = object:inherit({
                         end
                     end
                     sign:new(table)
+                elseif (table.class == chest.class) then 
+                    chest:new(table)
+                elseif (table.class == stairs.class) then 
+                    stairs:new(table)
                 elseif (table.class == door.class) then
                     door:new(table)
                 elseif (table.class == item.class) then 
@@ -129,6 +145,7 @@ creature = entity:inherit({
     
     -- static vars
     class="creature",
+    parent_class=entity.class,
 
     -- vars
     hostile=false,
@@ -193,7 +210,7 @@ creature = entity:inherit({
     end,
 
     move_towards_and_attack = function(self, other)
-        if (dist_simp(self,other) <= 1) then
+        if (dist_simp(self,other) <= 1 and (self.x==other.x or self.y==other.y)) then
             self:attack(other)
         else
             self:move_towards(other)
@@ -231,8 +248,8 @@ creature = entity:inherit({
     take_dmg = function(self,dmg)
         if(self == player) draw:flash()
         self.attacked = true
+        self.dhp=(self.dhp_turn==turn and self.dhp - dmg) or dmg*-1
         self.dhp_turn=turn
-        self.dhp=dmg*-1
         self.hp-=dmg
         if (self.hp <= 0) then
             self:kill()
@@ -252,31 +269,44 @@ player = creature:new({
 
     -- static vars
     class="player",
+    parent_class=creature.class,
+    interactable=false,
 
     -- vars
     name="you",
     xp=0,
+    inventory={},
 
     -- move the player or attack if enemy in target tile
     action_dir = function(self, x,y)
+        valid = false
         if (self:move(x,y)) then
-            log:add("you moved")
-            return true
-        else
-            for e in all(entity.entities) do 
-                if (e.hostile and e.x==x and e.y==y) then
+            --log:add("you moved")
+            valid = true
+        end
+        for e in all(entity.entities) do
+            if (e.x==x and e.y==y) do
+                if (e.class==enemy.class and e.hostile and not e.dead) then
                     self:attack(e)
-                    return true
+                    valid = true
+                elseif (e.class==stairs.class) then
+                    e:trigger()
+                    valid = true
                 end
             end
         end
-        return false
+        return valid
     end,
 
     -- wait one turn
     action_wait = function(self)
         log:add("you waited")
         return true
+    end,
+
+    -- add item to inventory
+    add_inventory = function(self,id)
+        add(self.inventory,id)
     end,
 })
 
@@ -290,6 +320,7 @@ pet = creature:inherit({
 
     -- static vars
     class="pet",
+    parent_class=creature.class,
     collision=false,
 
     -- update function
@@ -310,6 +341,7 @@ npc = creature:inherit({
 
     -- static vars
     class="npc",
+    parent_class=creature.class,
 
     -- update function
     update = function(self)
@@ -328,6 +360,7 @@ enemy = creature:inherit({
 
     -- static vars
     class="enemy",
+    parent_class=creature.class,
     hostile = true,
 
     -- vars
@@ -346,7 +379,6 @@ enemy = creature:inherit({
 })
 
 
-
 -------------------------------------------------------------------------------
 -- sign
 -------------------------------------------------------------------------------
@@ -355,13 +387,20 @@ sign = entity:inherit({
 
     -- static vars
     class="sign",
+    parent_class=entity.class,
 
     --vars
     message="...",
+    bg=15,
+    fg=0,
+    interact_text="read",
 
+    -- interact action
     interact = function(self)
         change_state(state_read)
         sel.read.text=self.message
+        sel.read.fg=self.fg
+        sel.read.bg=self.bg
     end,
 
 })
@@ -375,14 +414,40 @@ door = entity:inherit({
 
     -- static vars
     class="door",
+    parent_class=entity.class,
 
+    -- vars
+    locked=0,
+
+    -- interact action
     interact = function(self)
         self.collision = not self.collision
         self.sprite = self.collision and 82 or 81
+        log:add((self.collision and "closed" or "opened") .. " door")
+        change_state(state_game)
     end,
 
 })
 
+
+-------------------------------------------------------------------------------
+-- chest
+-------------------------------------------------------------------------------
+
+chest = entity:inherit({
+
+    -- static vars
+    class="chest",
+    parent_class=entity.class,
+    interact_text="open",
+
+    -- interact action
+    interact = function(self)
+        log:add("opened chest")
+        change_state(state_game)
+    end,
+
+})
 
 
 -------------------------------------------------------------------------------
@@ -393,6 +458,35 @@ item = entity:inherit({
 
     -- static vars
     class="item",
+    parent_class=entity.class,
     collision=false,
+    interact_text="pick up",
+
+    -- interact action
+    interact = function(self)
+        log:add("picked up " .. self.name)
+        player:add_inventory(self.sprite)
+        del(entity.entities, self)
+        change_state(state_game)
+    end,
+
+})
+
+-------------------------------------------------------------------------------
+-- stairs
+-------------------------------------------------------------------------------
+
+stairs = entity:inherit({
+
+    -- static vars
+    class="stairs",
+    parent_class=entity.class,
+    interactable=false,
+    collision=false,
+
+    -- trigger action
+    trigger = function(self)
+        log:add("went on stairs")
+    end,
 
 })
