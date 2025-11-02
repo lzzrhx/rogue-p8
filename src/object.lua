@@ -53,6 +53,11 @@ entity=object:inherit({
     return e
   end,
 
+  -- destructor
+  destroy=function(self)
+    del(entity.entities,self)
+  end,
+
   -- update entity
   update=function(self) end,
 
@@ -83,7 +88,7 @@ entity=object:inherit({
       if (entity_data.class==player.class) then
         tbl_merge(player,tbl)
         pet_sprite=(rnd()>0.5 and sprites.pet_cat) or sprites.pet_dog
-        pet:new(tbl_merge_new({x=x-1,y=y,sprite=pet_sprite},data_entities[pet_sprite]))
+        pet:new(tbl_merge_new({x=x,y=y,sprite=pet_sprite},data_entities[pet_sprite]))
       else
         tbl_merge(tbl,entity_data)
         if(tbl.class==pet.class)then pet:new(tbl)
@@ -118,6 +123,7 @@ creature=entity:inherit({
   hostile=false,
   attacked=false,
   blink_delay=0,
+  flash_n=0,
   anim=nil,
   anim_frame=0,
   anim_x=0,
@@ -154,17 +160,22 @@ creature=entity:inherit({
         if (self.dead) then sprite=((frame==1 and (turn-self.dhp_turn)<=1 and self.blink_delay<=0 and not creature.anim_playing) and sprites.void) or sprites.grave
         elseif (self.attacked and frame==1 and self.blink_delay<=0 and not creature.anim_playing) then
           sprite=sprites.void
-          print(abs(self.dhp),pos_to_screen(self).x+self.anim_x+4-str_width(abs(self.dhp))*0.5,pos_to_screen(self).y+self.anim_y+1,self.dhp<0 and 8 or 11)
+          if(state==state_game)print(abs(self.dhp),pos_to_screen(self).x+self.anim_x+4-str_width(abs(self.dhp))*0.5,pos_to_screen(self).y+self.anim_y+1,self.dhp<0 and 8 or 11)
         end
       end
+      if (self.flash_n>0) then
+        self.flash_n-=1
+        pal({0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7})
+      end
       spr(sprite,pos_to_screen(self).x+self.anim_x,pos_to_screen(self).y+self.anim_y)
+      pal()
     end
   end,
 
   -- perform turn actions
   do_turn=function(self)
     if(turn>self.dhp_turn)self.attacked=false
-    if(self.dead and (turn-self.dhp_turn)>timer_corpse)del(entity.entities,self)
+    if(self.dead and (turn-self.dhp_turn)>timer_corpse)self:destroy()
     if(self.target~=nil and self.target.dead or (turn-self.target_turn)>timer_target)self.target=nil
     return (not self.dead and self:in_frame())
   end,
@@ -183,7 +194,10 @@ creature=entity:inherit({
       self.anim_x=self.anim.dist*anim_pos*((self.anim_x<-0.1 and -1) or (self.anim_x>0.1 and 1) or 0)
       self.anim_y=self.anim.dist*anim_pos*((self.anim_y<-0.1 and -1) or (self.anim_y>0.1 and 1) or 0)
     elseif (self.anim==creature.anims.attack) then
-      if(self.anim_frame==self.anim.frames)draw.play_flash(self.target)
+      if (self.target~=nil) then
+        if(self.anim_frame==self.anim.frames and self.target==player)draw.flash_n=2
+        if(self.anim_frame==self.anim.frames-3)self.target.flash_n=2
+      end
       self.anim_x=self.anim.dist*anim_pos*((self.anim_x1<-0.1 and -1) or (self.anim_x1>0.1 and 1) or 0)
       self.anim_y=self.anim.dist*anim_pos*((self.anim_y1<-0.1 and -1) or (self.anim_y1>0.1 and 1) or 0)
     end
@@ -209,17 +223,14 @@ creature=entity:inherit({
 
   -- follow another entity
   follow=function(self,other)
-    if(dist({x=self.x,y=self.y},{x=other.prev_x,y=other.prev_y})==1) then self:move(other.prev_x,other.prev_y)
+    if(in_reach(self,{x=other.prev_x,y=other.prev_y})) then self:move(other.prev_x,other.prev_y)
     else self:move_towards(other) end
   end,
 
   -- move towards another creature and attack when close
   move_towards_and_attack=function(self,other)
-    if ((dist(self,other)<=1) and ((self.x==other.x or self.y==other.y) or (not collision({x=self.x,y=other.y})) or (not collision({x=other.x,y=self.y})))) then
-      self:attack(other)
-    else
-      self:move_towards(other)
-    end
+    if (in_reach(self,other)) then self:attack(other)
+    else self:move_towards(other) end
   end,
 
   -- try to move an towards another entity
@@ -280,7 +291,6 @@ player = creature:new({
 
   -- vars
   xp=0,
-  inv={},
 
   -- move the player or attack if there is an enemy in the target tile
   action_dir=function(self,x,y)
@@ -304,9 +314,6 @@ player = creature:new({
     msg.add("you waited")
     return true
   end,
-
-  -- add item to inv
-  add_inv=function(self,id) add(self.inv,id) end,
 })
 
 
@@ -331,6 +338,9 @@ pet=creature:inherit({
       else
         self:follow(player)
       end
+    elseif not self:in_frame() then
+      self.x=player.prev_x
+      self.y=player.prev_y
     end
   end,
 })
@@ -465,7 +475,7 @@ chest=entity:inherit({
 
 
 -------------------------------------------------------------------------------
--- item
+-- item (in world)
 -------------------------------------------------------------------------------
 item = entity:inherit({
   -- static vars
@@ -477,9 +487,48 @@ item = entity:inherit({
   -- interact action
   interact=function(self)
     msg.add("picked up "..self:get_name())
-    player:add_inv(self.sprite)
-    del(entity.entities,self)
+    inventory.add(self)
+    self:destroy()
     change_state(state_game)
   end,
 
 })
+
+
+
+-------------------------------------------------------------------------------
+-- item (in inventory)
+-------------------------------------------------------------------------------
+inv_item=object:inherit({
+  -- static vars
+  class="inv_item",
+  parent_class=object.class,
+  num=0,
+
+  -- vars
+  name=nil,
+  sprite=0,
+  interactable=false,
+
+  -- constructor
+  new=function(self,tbl)
+    local new_item=self:inherit(tbl)
+    inv_item.num=inv_item.num+1
+    new_item["id"]=inv_item.num
+    return new_item
+  end,
+})
+
+
+
+-------------------------------------------------------------------------------
+-- key
+-------------------------------------------------------------------------------
+--[[inv_item_key=inv_item:inherit({
+  -- static vars
+  class="inv_item_key",
+  parent_class=inv_item.class,
+  interactable=true,
+
+  -- vars
+})]]--

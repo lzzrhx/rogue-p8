@@ -51,7 +51,10 @@ flags={
   entity=7,
 }
 
-
+-- options
+options={
+  disable_flash=false,
+}
 
 -------------------------------------------------------------------------------
 -- built-in functions
@@ -133,7 +136,7 @@ update={
   read=function() input.read() end,
 
   -- dead state
-  dead=function() input.dead() end,
+  dead=function() input.dead() for e in all(entity.entities) do e:update() end end,
 }
 
 
@@ -144,10 +147,9 @@ update={
 draw={
   -- flash the screen
   flash_n=0,
-  play_flash=function() draw.flash_n=2 end,
-  flash_step=function(e)
-    if(draw.flash_n>0)then
-      cls((e==player and player.hp<5 and draw.flash_n==1 and 8) or 7)
+  flash_step=function()
+    if(not options.disable_flash and draw.flash_n>0)then
+      cls((player.hp<5 and draw.flash_n==1 and 8) or 7)
       draw.flash_n-=1
     end
   end,
@@ -209,7 +211,7 @@ draw={
     end
     -- ui elements
     print("hp:",2,120,6)
-    rectfill(14,120,14+68*hp,124,(hp<0.25 and 8) or (hp<0.5 and 9) or (hp<0.75 and 10) or 11)
+    if(hp>0)rectfill(14,120,14+68*hp,124,(hp<0.25 and 8) or (hp<0.5 and 9) or (hp<0.75 and 10) or 11)
     print(s_z,126-str_width(s_z),113,6)
     print(s_x,126-str_width(s_x),120,6)
   end,
@@ -220,7 +222,6 @@ draw={
     draw.game()
     draw.shadow()
     -- vars
-    inv_num=tbl_len(player.inv)
     s_btn="cancel 🅾️  select ❎"
     s_chr="⬅️ character ➡️"
     s_inv="⬅️ inventory ➡️"
@@ -231,7 +232,7 @@ draw={
     line(23,104,103,104,6)
     -- button legend
     print(s_btn,64-str_width(s_btn)*0.5,114,5)
-    clip(64-str_width(s_btn)*0.5,113,(sel.menu.tab==1 and inv_num>0 and 80) or 40,6)
+    clip(64-str_width(s_btn)*0.5,113,(sel.menu.tab==1 and inventory.num>0 and inventory.items[sel.menu.i].interactable and 80) or 40,6)
     print(s_btn,64-str_width(s_btn)*0.5,113,6)
     clip()
     -- character tab
@@ -243,7 +244,7 @@ draw={
     elseif (sel.menu.tab==1) then
       print(s_inv,64-str_width(s_inv)*0.5,26,5)
       print(s_inv,64-str_width(s_inv)*0.5,25,6)
-      if (inv_num>0) do for i=1,inv_num do s_items=((i==1 and "") or s_items)..((sel.menu.i==i and "▶ ") or " ")..player.inv[i].."\n" end end
+      if (inventory.num>0) do for i=1,inventory.num do s_items=((i==1 and "") or s_items)..((sel.menu.i==i and "▶ ") or " ")..inventory.items[i].name.."\n" end end
       print(s_items,28,34,5)
       clip(23,28+6*sel.menu.i,80,6)
       print(s_items,28,34,6)
@@ -361,9 +362,9 @@ input={
     if(btnp(➡️))sel.menu.tab=(sel.menu.tab+1)%2
     if(btnp(🅾️))change_state(state_game)
     if (sel.menu.tab==1) then
-      inv_num=tbl_len(player.inv)
       if(btnp(⬆️) and sel.menu.i>1)sel.menu.i-=1
-      if(btnp(⬇️) and sel.menu.i<inv_num)sel.menu.i+=1
+      if(btnp(⬇️) and sel.menu.i<inventory.num)sel.menu.i+=1
+      --if(btnp(❎) and inventory.num>0 and inventory.items[sel.menu.i].interactable)
     end
   end,
 
@@ -412,6 +413,29 @@ msg={
 
   -- animate the active massage
   anim_step=function() if (msg.frame>=msg.width) then msg.frame=msg.width if (#msg.queue>0) then msg.delay-=1 if (msg.delay<=0) then msg.txt_set(deli(msg.queue,1)) end end else msg.frame+=3 end end,
+}
+
+
+
+-------------------------------------------------------------------------------
+-- inventory
+-------------------------------------------------------------------------------
+inventory={
+  items={},
+  num=0,
+
+  -- add item to inventory (from world)
+  add=function(e)
+    tbl={name=e:get_name(),sprite=e.sprite}
+    add(inventory.items,inv_item:new(tbl))
+    inventory.num+=1
+  end,
+
+  -- remove item from inventory
+  remove=function(itm)
+    del(inventory.items,itm)
+    inventory.num-=1
+  end
 }
 
 
@@ -499,6 +523,9 @@ function collision(x,y)
   for e in all(entity.entities) do if (e.collision and e.x==x and e.y==y) return true end
   return false
 end
+
+-- check if neighbour tile is in reach
+function in_reach(a,b) return ((dist(a,b)<=1) and ((a.x==b.x or a.y==b.y) or (not collision(a.x,b.y)) or (not collision(b.x,a.y)))) end
 
 -- perform turn
 function do_turn()

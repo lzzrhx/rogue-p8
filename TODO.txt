@@ -1,23 +1,28 @@
 -------------------------------------------------------------------------------
 -- todo
 -------------------------------------------------------------------------------
--- entities, change black transparancy to other color
--- inventory screen -> names and interact (use/equip)
--- locked doors and keys
+-- quest items (non usable)
+-- locked doors and keys (quest item)
 -- chests
 -- equipable items
--- health potion
+-- usable items (consumables)
+-- health potion (usable item)
 -- ranged combat
 -- talk to npcs
 -- action menu -> wait / magic / ranged
 -- intro screen / main menu
 -- make stairs work
+-- add mouse support
+-- debug menu
 -- plan: character stats
+    -- xp and levels
     -- movement speed
+    -- (enemy) attack distance (1 or 2 tiles)
 -- plan: scrolls
 -- plan: rings
 -- plan: other potions
 -- plan: magic system
+-- (?) randomly generated dungeons (underworld)
 -- (?) food and hunger
 -- (?) field of view (shadowcasting)
 -- (?) pathfinding (a-star)
