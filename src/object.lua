@@ -421,6 +421,8 @@ door=entity:inherit({
 
   -- interact action
   interact=function(self)
+    self.collision=not self.collision
+    self.sprite=(self.collision and 82) or 81
     if (self.lock>0) then
       self.lock=0
       self.color_swap_enable=false
@@ -428,8 +430,6 @@ door=entity:inherit({
     else
       msg.add(((self.collision and "closed") or "opened").." door")
     end
-    self.collision=not self.collision
-    self.sprite=(self.collision and 82) or 81
     change_state(state_game)
   end,
 })
