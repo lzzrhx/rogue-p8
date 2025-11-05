@@ -118,6 +118,7 @@ init={
   -- chest state
   chest=function()
     sel.chest.anim_frame={}
+    sel.chest.anim_playing=true
     for itm in all(sel.chest.entity.content) do add(sel.chest.anim_frame,60) end
   end,
 
@@ -147,7 +148,10 @@ update={
   look=function() if(input.look())set_look() end,
 
   -- chest state
-  chest=function() if(sel.chest.entity.play_anim)sel.chest.entity:anim_step() end,
+  chest=function()
+    if(sel.chest.entity.play_anim)sel.chest.entity:anim_step()
+    if(sel.chest.anim_frame[num]<=0)input.chest()
+    end,
 
   -- read state
   read=function() input.read() end,
@@ -298,10 +302,11 @@ draw={
     cls()
     player:draw()
     sel.chest.entity:draw()
+    if (not sel.chest.anim_playing)draw.monochrome()
     -- vars
     s_x="take items ❎"
+    num=tbl_len(sel.chest.entity.content)
     if (sel.chest.entity.anim_frame<=0) then
-      num=tbl_len(sel.chest.entity.content)
       for i=1,num do
         target={x=68-num*8+(i-1)*16,y=52}
         if (i==1 or sel.chest.anim_frame[i-1]<=0) then
@@ -314,13 +319,19 @@ draw={
             end
             pal()
             sel.chest.anim_frame[i]-=1
+            if (sel.chest.anim_frame[num]<=0) then 
+              sel.chest.anim_playing=false
+              draw.flash_n=2
+            end
           else
-            if(sel.chest.anim_frame[num]<=0 or blink)spr(sel.chest.entity.content[i].sprite,target.x,target.y)
+            if(not sel.chest.anim_playing or blink)wavy_spr(sel.chest.entity.content[i].sprite,target.x,target.y)
           end
         end
       end
-      print(s_x,64-str_width(s_x)*0.5,52+17,5)
-      print(s_x,64-str_width(s_x)*0.5,52+16,6)
+    end
+    if (not sel.chest.anim_playing) then
+      wavy_print(s_x,64-str_width(s_x)*0.5,87,5)
+      wavy_print(s_x,64-str_width(s_x)*0.5,86,6)
     end
   end,
 
@@ -414,6 +425,9 @@ input={
       --if(btnp(❎) and inventory.num>0 and inventory.items[sel.menu.i].interactable)
     end
   end,
+
+  -- chest state
+  chest=function() if (btnp(❎)) change_state(state_game) end,
 
   -- read state
   read=function() if (btnp(❎)) change_state(state_game) end,
@@ -531,14 +545,28 @@ end
 function pos_to_screen(pos) return {x=8*(pos.x-cam_x),y=8*(pos.y-cam_y)} end
 
 -- quadratic rational smoothstep
-function smoothstep(x)
-    return x*x/(2*x*x-2*x+1);
-end
+--function smoothstep(x) return x*x/(2*x*x-2*x+1) end
+
+-- cubic polynomial smoothstep
+function smoothstep(x) return x*x*(3-2*x) end
 
 -- linear interpolation
 function interp(val,min,max)
   return (max-min)*val+min
 end
+
+-- wavy text
+function wavy_print(s,x,y,c,h)
+  for i=1,#s do
+    print(sub(s,i,i),x+i*4,y+sin(t()*1.25+i*0.06)*(h or 3),c)
+  end
+end
+
+-- wavy sprite
+function wavy_spr(s,x,y,i,o,h)
+    spr(s,x,y+sin(t()*1.25+(i or 1)*(o or 0.06))*(h or 3))
+end
+
 
 
 -------------------------------------------------------------------------------

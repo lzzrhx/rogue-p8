@@ -1,33 +1,54 @@
 -------------------------------------------------------------------------------
 -- todo
 -------------------------------------------------------------------------------
--- chests / golden chest / mimic chest
--- animation when opening chest
--- transition fades between scenes/when going on stairs (dithered)
--- inventory sorting (by class and alphabet)
--- equippable items
--- sword, dagger, bow (equipable items)
+-- chests (with animations)
+-- intro screen / main menu
+-- stairs -> upper floors / lower floors
+-- transition (dithered fades) between scenes / when traversing stairs
+-- npc dialogue
+-- map
+-- auto inventory sorting (by class and alphabet)
+-- "alternative version" flags for entities (binary number (0-3) from flags 6 & 7)
 -- consumable items
 -- health potion (consumable item)
+-- equippable items
+-- sword, dagger, bow (equipable items)
 -- ranged combat
--- talk to npcs
--- action menu -> wait / magic / ranged
--- intro screen / main menu
--- add mouse support
--- debug menu
--- make stairs work
--- palette swapping on enemies
+-- traps
+
+-- thing to plan
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+-- plan: equippables (armor / rings / melee weapons / ranged weapons)
+-- plan: consumables (scrolls/potions)
 -- plan: character stats
     -- xp and levels
-    -- movement speed
-    -- (enemy) attack distance (1 or 2 tiles)
--- plan: scrolls
--- plan: rings
--- plan: potions
--- plan: magic system
+    -- melee proficiency
+    -- ranged proficiency
+-- plan: character statuses
+    -- poisoned
+    -- confused
+    -- charmed
+    -- sleeping
+    -- blind
+    -- scared
+-- plan: enemy types / stats
+-- plan: story / dialogue / npcs / areas
+
+-- maybe
+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+-- (?) group keys in inventory
+-- (?) golden chest / mimic chest
+-- (?) magic system
+-- (?) senses (hearing / smell)
+-- (?) mouse support
+-- (?) debug menu
+-- (?) palette swapping on enemies
 -- (?) portals (teleport)
--- (?) randomly generated dungeons (underworld)
+-- (?) score system
+-- (?) variable attack distance for some enemies (1 or 2 tiles)
+-- (?) movement speed stat
 -- (?) food and hunger
+-- (?) procedural system for drawing roads and grass with shapes instead of sprites
+-- (?) randomly generated dungeons (underworld)
 -- (?) field of view (shadowcasting)
 -- (?) pathfinding (a-star)
--- (?) score system
