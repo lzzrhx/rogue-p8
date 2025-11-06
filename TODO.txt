@@ -1,7 +1,6 @@
 -------------------------------------------------------------------------------
 -- todo
 -------------------------------------------------------------------------------
--- intro screen / main menu
 -- stairs -> upper floors / lower floors
 -- transition (dithered fades) between scenes / when traversing stairs
 -- npc dialogue

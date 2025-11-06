@@ -44,13 +44,15 @@ flag_entity=7
 -- vars
 state=nil -- game state
 turn=1 -- turn number
-frame=0 -- animation frame (increments once per second)
-prev_frame=0 -- previous animation frame (increments once per second)
+frame=0 -- animation frame (increments twice per second)
+prev_frame=0 -- previous animation frame (increments twice per second)
 blink_frame=0 -- frame for fast blink animations (updates 30 times per soncond)
 blink=false
 cam_x=0 -- camera x position
 cam_y=0 -- camera y position
 cam_offset=4 -- camera scroll offset
+title_effect_num_points=96
+title_effect_colors={8,9,10,11,12,13,14,15}
 
 -- options
 option_disable_flash=false
@@ -92,9 +94,6 @@ end
 -- init
 -------------------------------------------------------------------------------
 init={
-  -- title state
-  title=function(sel) sel_title=0 end,
-
   -- menu state
   menu=function(sel)
     sel_menu={tab=0,i=1}
@@ -206,50 +205,24 @@ draw={
 
   -- game state
   title=function()
-    cls()
-    s_title="magus magicus  "
-    --[[
-    --clip(0,66,128,64)
-    for i=1,#s_title do
-      --y=8*4+smoothstep((sin(t()*0.5+i)+1)*0.5)*16
-      --print(sin(t()*0.75),0,0,7)
-      x=sin(t()/10+i/#s_title)*32
-      y=cos(t()/10+i/#s_title)*4
-      --print("\^w\^t"..sub(s_title,i,i),64-str_width(s_title)*1.5+(i-1)*12,y,7)
-      --print("\^w\^t"..sub(s_title,i,i),64+x,64+y,7)
-      print(sub(s_title,#s_title-i+1,#s_title-i+1),64+x,64+y,7)
-      --print(".",64-str_width("."),30,7)
+    cls(0)
+    -- title effect
+    for i=1,title_effect_num_points do
+      x=cos(t()/8+i/title_effect_num_points)*56
+      y=sin(t()/8+i/title_effect_num_points)*10+sin(t()+i*(1/title_effect_num_points)*5)*4
+      c=title_effect_colors[i%(#title_effect_colors)+1]
+      for j=1,3 do pset(64+x+j,42+y+j,c) end
     end
-    ]]--
-
-    
-    for i=1,#s_title do
-      x=i*8
-      y=0
-      c=7
-      for j=1,10 do
-        --y+=j+t()%10
-        c=7-j
-        print("\^w\^t"..sub(s_title,i,i),64-str_width(s_title)+x,y,c)
-      end
-      print(".",64-str_width("."),30,7)
+    -- main title
+    s_title="\014magus magicus"
+    print(s_title,64-str_width(s_title)*0.5,34,4)
+    print(s_title,64-str_width(s_title)*0.5,33,7)
+    -- button legend
+    s_btn_x="start game ❎"
+    if (frame==0) then
+      print(s_btn_x,64-str_width(s_btn_x)*0.5,71,5)
+      print(s_btn_x,64-str_width(s_btn_x)*0.5,70,6)
     end
-
-    num_stars=20
-
-    for i=1,num_stars do
-      x=cos(t()/8+i/num_stars)*20
-      y=sin(t()/8+i/num_stars)*3
-      pset(64+x,64+y+5+sel_title*12,7)
-    end
-
-    s_new_game="new game"
-    print(s_new_game,64-str_width(s_new_game)*0.5,65,5)
-    if(sel_title==0)print(s_new_game,64-str_width(s_new_game)*0.5,64,7)
-    s_continue="continue"
-    print(s_continue,64-str_width(s_continue)*0.5,65+12,5)
-    if(sel_title==1)print(s_continue,64-str_width(s_continue)*0.5,64+12,7)
-
   end,
 
   -- game state
@@ -316,10 +289,13 @@ draw={
     elseif (sel_menu.tab==1) then
       print(s_inv,64-str_width(s_inv)*0.5,26,5)
       print(s_inv,64-str_width(s_inv)*0.5,25,6)
-      if (inventory.num>0) do for i=1,inventory.num do s_itms=((i==1 and "") or s_itms)..((sel_menu.i==i and "▶ ") or " ")..inventory.items[i].name.."\n" end end
-      print(s_itms,28,34,5)
+      if (inventory.num>0) do
+        print("▶",28,34+(sel_menu.i-1)*6,6)
+        for i=1,inventory.num do s_itms=((i==1 and "") or s_itms)..inventory.items[i].name.."\n" end
+      end
+      print(s_itms,28+(inventory.num>0 and 6 or 0),34,5)
       clip(23,28+6*sel_menu.i,80,6)
-      print(s_itms,28,34,6)
+      print(s_itms,28+(inventory.num>0 and 6 or 0),34,6)
       clip()
     end
   end,
@@ -453,11 +429,7 @@ draw={
 input={
   -- title state
   title=function()
-    if(btnp(⬆️) and sel_title>0)sel_title-=1
-    if(btnp(⬇️) and sel_title<1)sel_title+=1
-    if(btnp(❎)) then
-      if(sel_title==0)change_state(state_game)
-    end
+    if(btnp(❎)) then change_state(state_game) end
   end,
 
   -- game state

@@ -29,3 +29,17 @@ function smoothstep(x) return x*x*(2-x*x) end
 
 -- quadratic rational smoothstep
 function smoothstep(x) return x*x/(2*x*x-2*x+1) end
+
+--[[
+    -- spinning rainbow waves
+    num_stars=96
+    cols={8,9,10,11,12,13,14,15}
+    for i=1,num_stars do
+      x=cos(t()/8+i/num_stars)*54
+      y=sin(t()/8+i/num_stars)*10+sin(t()+i*(1/num_stars)*5)*4
+      c=cols[i%(#cols)+1]
+      pset(64+x,30+y+9,c)
+      pset(64+x+1,30+y+9+1,c)
+      pset(64+x+2,30+y+9+2,c)
+    end
+        ]]--
