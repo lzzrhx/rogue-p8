@@ -1,9 +1,9 @@
 -------------------------------------------------------------------------------
 -- todo
 -------------------------------------------------------------------------------
--- stairs -> upper floors / lower floors
--- npc dialogue
+-- stairs -> upper floors / lower floors (z-levels)
 -- map
+-- npc dialogue
 -- auto inventory sorting (by class and alphabet)
 -- consumable items
 -- health potion (consumable item)
@@ -11,15 +11,19 @@
 -- sword, dagger, bow (equipable items)
 -- ranged combat
 -- traps
+-- magic
 
--- thing to plan
--- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+
+-------------------------------------------------------------------------------
+-- things to plan
+-------------------------------------------------------------------------------
 -- plan: equippables (armor / rings / melee weapons / ranged weapons)
 -- plan: consumables (scrolls/potions)
 -- plan: character stats
     -- xp and levels
-    -- melee proficiency
-    -- ranged proficiency
+    -- (?) melee proficiency
+    -- (?) ranged proficiency
 -- plan: character statuses
     -- poisoned
     -- confused
@@ -27,14 +31,17 @@
     -- sleeping
     -- blind
     -- scared
+-- plan: magic and spells
 -- plan: enemy types / stats
 -- plan: story / dialogue / npcs / areas
 
+
+
+-------------------------------------------------------------------------------
 -- maybe
--- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+-------------------------------------------------------------------------------
 -- (?) group keys in inventory
 -- (?) golden chest / mimic chest
--- (?) magic system
 -- (?) senses (hearing / smell)
 -- (?) mouse support
 -- (?) debug menu

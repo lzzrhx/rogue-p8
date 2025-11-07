@@ -3,14 +3,20 @@ version 43
 __lua__
 -- magus magicus
 -- by lzzrhx
+
+-- include assets
 #include assets/font-nec-apc3-8x8.lua
-#include src/utils.lua
-#include src/main.lua
-#include src/object.lua
+
+-- include data
 #include data/entities.lua
 #include data/signs.lua
 #include data/locks.lua
 #include data/chests.lua
+
+-- include source
+#include src/utils.lua
+#include src/main.lua
+#include src/object.lua
 __gfx__
 00000000000000008800008800dd5500000000000000000000000000000000000000000042222240000000000000000000000000000000000000000000000090
 0000000000000000820000280ddddd50000100004400000000000000dd0000000000000042ddd240000000000644460004444400000000000000000001111400
