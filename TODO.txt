@@ -2,7 +2,6 @@
 -- todo
 -------------------------------------------------------------------------------
 -- stairs -> upper floors / lower floors
--- transition (dithered fades) between scenes / when traversing stairs
 -- npc dialogue
 -- map
 -- auto inventory sorting (by class and alphabet)

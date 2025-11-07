@@ -5,7 +5,7 @@
 -- constants
 timer_corpse=20 -- timeout for grave (turns)
 timer_target=3 -- timeout for target (turns)
-width=128 -- area width
+width=103 -- area width
 height=64 -- area height
 ui_h=2 -- row height of bottom ui box
 
@@ -48,6 +48,10 @@ frame=0 -- animation frame (increments twice per second)
 prev_frame=0 -- previous animation frame (increments twice per second)
 blink_frame=0 -- frame for fast blink animations (updates 30 times per soncond)
 blink=false
+flash_frame=0
+fade_frame=0
+fade_chars={"░","▒"}
+fade_action=nil
 cam_x=0 -- camera x position
 cam_y=0 -- camera y position
 cam_offset=4 -- camera scroll offset
@@ -57,14 +61,16 @@ title_effect_colors={8,9,10,11,12,13,14,15}
 -- options
 option_disable_flash=false
 
+
+
 -------------------------------------------------------------------------------
 -- built-in functions
 -------------------------------------------------------------------------------
 
 -- init
 function _init()
-  change_state(state_title)
   populate_map()
+  change_state(state_title)
 end
 
 -- update
@@ -85,6 +91,7 @@ function _draw()
   if(state~=state_reset)then
     draw[state]()
     draw.flash_step()
+    draw.fade_step()
   end
 end
 
@@ -170,13 +177,27 @@ update={
 -- draw
 -------------------------------------------------------------------------------
 draw={
-  flash_frame=0,
+  -- start playing fade
+  play_fade=function(func,param)
+    fade_frame=5
+    fade_action=(func and {func=func,param=param}) or nil
+  end,
 
-  -- flash the screen
+  -- perform fade animation step
+  fade_step=function()
+    if(fade_frame>0)then
+      if (fade_frame==3) do cls(0)
+      else for j=1,16 do for k=1,16 do print("\014"..fade_chars[(fade_frame>#fade_chars) and (6-fade_frame) or fade_frame],(j-1)*8,(k-1)*8,0) end end end
+      fade_frame-=1
+      if(fade_frame==3 and fade_action)fade_action.func(fade_action.param)
+    end
+  end,
+
+  -- perform screen flash animation step
   flash_step=function()
-    if(not option_disable_flash and draw.flash_frame>0)then
-      cls((state==state_game and player.hp<5 and draw.flash_frame==1 and 8) or 7)
-      draw.flash_frame-=1
+    if(not option_disable_flash and flash_frame>0)then
+      cls((state==state_game and player.hp<5 and flash_frame==1 and 8) or 7)
+      flash_frame-=1
     end
   end,
 
@@ -209,14 +230,14 @@ draw={
     -- title effect
     for i=1,title_effect_num_points do
       x=cos(t()/8+i/title_effect_num_points)*56
-      y=sin(t()/8+i/title_effect_num_points)*10+sin(t()+i*(1/title_effect_num_points)*5)*4
+      y=sin(t()/8+i/title_effect_num_points)*16+sin(t()+i*(1/title_effect_num_points)*5)*4
       c=title_effect_colors[i%(#title_effect_colors)+1]
       for j=1,3 do pset(64+x+j,42+y+j,c) end
     end
     -- main title
     s_title="\014magus magicus"
-    print(s_title,64-str_width(s_title)*0.5,34,4)
-    print(s_title,64-str_width(s_title)*0.5,33,7)
+    print(s_title,68-str_width(s_title)*0.5,38,4)
+    print(s_title,68-str_width(s_title)*0.5,37,7)
     -- button legend
     s_btn_x="start game ❎"
     if (frame==0) then
@@ -227,16 +248,16 @@ draw={
 
   -- game state
   game=function()
-    -- vars
-    hp_ratio=max(0,player.hp/player.max_hp)
-    s_btn_z="menu 🅾️"
-    s_btn_x="look ❎"
     -- draw map and entities
     cls()
     update_camera()
     map(cam_x-1,cam_y-1,-8,-8,18,18-ui_h)
     for e in all(entity.entities) do if (not e.collision) e:draw() end
     for e in all(entity.entities) do if (e.collision) e:draw() end
+    -- vars
+    hp_ratio=max(0,player.hp/player.max_hp)
+    s_btn_z="menu 🅾️"
+    s_btn_x="look ❎"
     camera()
     draw.window_frame()
     -- animated message
@@ -263,14 +284,14 @@ draw={
 
   -- menu state
   menu=function()
+    -- draw map and entities
+    draw.game()
+    draw.monochrome()
     -- vars
     s_btns="cancel 🅾️  select ❎"
     s_chr="⬅️ character ➡️"
     s_inv="⬅️ inventory ➡️"
     s_itms="empty"
-    -- draw map and entities
-    draw.game()
-    draw.monochrome()
     -- bg box
     rectfill(23,23,103,103,1)
     line(23,22,103,22,6)
@@ -302,9 +323,6 @@ draw={
 
   -- look state
   look=function()
-    -- vars
-    s_btn_z="cancel 🅾️"
-    s_btn_x=sel_look.text.." ❎"
     -- draw map, entities and selection
     draw.game()
     if(state==state_look)draw.monochrome()
@@ -312,6 +330,9 @@ draw={
     if(sel_look.entity)sel_look.entity:draw()
     if(state==state_look)vec2_spr(sprite_selection,pos_to_screen(sel_look))
     draw.window_frame()
+    -- vars
+    s_btn_z="cancel 🅾️"
+    s_btn_x=sel_look.text.." ❎"
     -- ui elements (shadow)
     if(state==state_look)then
       print("target:",2,114,5)
@@ -362,7 +383,7 @@ draw={
             -- flash the screen and set chest animation to finished after last item animation is done
             if (sel_chest.anim_frame[num_itms]<=0) then 
               chest.anim_playing=false
-              draw.flash_frame=2
+              flash_frame=2
             end
           -- draw the item bobbing up and down after the popping out of chest animation has finished
           else
@@ -380,6 +401,9 @@ draw={
 
   -- read state
   read=function()
+    -- draw map, entities and selection
+    draw.look()
+    draw.monochrome()
     -- vars
     s_btn_x="continue ❎"
     e=sel_read
@@ -387,9 +411,6 @@ draw={
     txt_h=str_height(sel_read.message)
     txt_expand=((txt_h>5 and txt_h-5) or 0)*3
     txt_offset=((txt_h<5 and 5-txt_h) or 0)*3
-    -- draw map, entities and selection
-    draw.look()
-    draw.monochrome()
     -- bg and message text
     rectfill(23,39-txt_expand,103,71+txt_expand,sel_read.bg)
     line(24,38-txt_expand,102,38-txt_expand,sel_read.bg)
@@ -429,7 +450,9 @@ draw={
 input={
   -- title state
   title=function()
-    if(btnp(❎)) then change_state(state_game) end
+    if(btnp(❎)) then 
+      draw.play_fade(change_state,state_game)
+    end
   end,
 
   -- game state

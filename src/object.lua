@@ -255,7 +255,7 @@ creature=entity:inherit({
     if (self.anim==creature.anims.attack) then
       x,y=self.anim_x1,self.anim_y1
       if (self.target) then
-        if(self.anim_frame==self.anim.frames and self.target==player)draw.flash_frame=2
+        if(self.anim_frame==self.anim.frames and self.target==player)flash_frame=2
         if(self.anim_frame==self.anim.frames-3)self.target.flash_frame=2
       end
     end
@@ -503,25 +503,6 @@ door=entity:inherit({
 
 
 -------------------------------------------------------------------------------
--- stairs
--------------------------------------------------------------------------------
-stairs=entity:inherit({
-  -- static vars
-  class="stairs",
-  parent_class=entity.class,
-  interactable=false,
-  collision=false,
-
-  -- trigger action
-  trigger=function(self)
-    -- TODO: implement this
-    msg.add("went on stairs")
-  end,
-})
-
-
-
--------------------------------------------------------------------------------
 -- sign
 -------------------------------------------------------------------------------
 sign=entity:inherit({
@@ -740,4 +721,23 @@ consumable=possession:inherit({
 equippable=possession:inherit({
   class="equippable",
   parent_class=possession.class,
+})
+
+
+
+-------------------------------------------------------------------------------
+-- stairs
+-------------------------------------------------------------------------------
+stairs=entity:inherit({
+  -- static vars
+  class="stairs",
+  parent_class=entity.class,
+  interactable=false,
+  collision=false,
+
+  -- trigger action
+  trigger=function(self)
+    -- TODO: implement this
+    msg.add("went on stairs")
+  end,
 })

@@ -65,8 +65,8 @@ function wavy_print(s,x,y,c,h)
 end
 
 -- wavy value
-function wavy(i,o,h)
-  return sin(t()*1.25+(i or 1)*(o or 0.06))*(h or 3)
+function wavy(i,h,s,o)
+  return sin(t()*(s or 1.25)+(i or 1)*(o or 0.06))*(h or 3)
 end
 
 -- change all colors (except black)
