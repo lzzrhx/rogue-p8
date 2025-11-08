@@ -1,15 +1,12 @@
 -------------------------------------------------------------------------------
 -- todo
 -------------------------------------------------------------------------------
--- npc dialogue
--- consumable items
--- health potion (consumable item)
--- equippable items
--- sword, dagger, bow (equipable items)
--- ranged combat
 -- traps
+-- npc dialogue
+-- consumable item
+-- equippable items
+-- ranged combat
 -- magic
--- auto inventory sorting (by class and alphabet)
 
 
 
@@ -24,7 +21,6 @@
     -- (?) ranged proficiency
 -- plan: character statuses
     -- poisoned
-    -- confused
     -- charmed
     -- sleeping
     -- blind
@@ -38,16 +34,15 @@
 -------------------------------------------------------------------------------
 -- maybe
 -------------------------------------------------------------------------------
--- (?) map
--- (?) group keys in inventory
+-- (?) trim stairs token use
+
+-- (?) auto inventory sorting (by class and alphabet) & group keys in inventory
 -- (?) golden chest / mimic chest
 -- (?) senses (hearing / smell)
--- (?) mouse support
 -- (?) debug menu
 -- (?) palette swapping on enemies
 -- (?) portals (teleport)
 -- (?) score system
--- (?) player name
 -- (?) variable attack distance for some enemies (1 or 2 tiles)
 -- (?) movement speed stat
 -- (?) food and hunger
@@ -55,3 +50,38 @@
 -- (?) randomly generated dungeons (underworld)
 -- (?) field of view (shadowcasting)
 -- (?) pathfinding (a-star)
+-- (?) mouse support
+-- (?) player name
+
+
+
+-------------------------------------------------------------------------------
+-- plan
+-------------------------------------------------------------------------------
+-- potions:
+    -- red: +10hp
+    -- green: ?
+    -- blue: ?
+    -- yellow: sleep
+
+-- status effects:
+    -- poisoned: -1hp every turn
+    -- charmed: enemy becomes ally (until hit 3 times)
+    -- sleep: skip turn
+    -- blind: moves in random direction, hits anyone in path
+    -- scared: moves away from source of effect
+
+-- spells:
+    -- beguile: cast charm on enemy, max n at the same time, only works on creatures max 1 level above caster
+        -- lvl 1: n=1
+        -- lvl 2: n=3
+        -- lvl 3: n=5
+    -- terrify: cast fear on enemy, lasts n turns, m aoe size, only works on creatures max 1 level above caster
+        -- lvl 1: n=3, m=1
+        -- lvl 2: n=4, m=2
+        -- lvl 3: n=5, m=3
+    -- 
+    -- familiar: passive spell
+        -- lvl 1: companion dmg=1
+        -- lvl 2: companion dmg=2
+        -- lvl 3: companion dmg=3

@@ -46,10 +46,10 @@ drawable=object:inherit({
       self.flash_frame-=1
       pal_all(7)
     elseif (self.pal_swap_enable) then
-      pal(self.pal_swap)
+      pal_set(self.pal_swap)
     end
     spr(sprite,x,y)
-    pal()
+    pal_set()
   end,
 })
 
@@ -120,9 +120,9 @@ entity=drawable:inherit({
   update=function(self) end,
 
   -- draw entity at world position (if in frame)
-  draw=function(self)
-    if (self:in_frame()) then
-      self:vec2_spr(pos_to_screen(self))
+  draw=function(self,offset,pos,sprite)
+    if (self:in_frame(offset)) then
+      self:vec2_spr(vec2_add((pos or pos_to_screen(self)),vec2_scale(offset or {x=0,y=0},8)),sprite)
       return true
     end
     return false
@@ -145,8 +145,9 @@ entity=drawable:inherit({
   do_turn=function(self) end,
 
   -- check if entity is on screen
-  in_frame=function(self)
-    return (self.x>=cam_x-1 and self.x<cam_x+17 and self.y>=cam_y-1 and self.y<cam_y+17-ui_h)
+  in_frame=function(self,offset)
+    pos=vec2_add(self,offset or {x=0,y=0})
+    return (pos.x>=cam_x-1 and pos.x<cam_x+17 and pos.y>=cam_y-1 and pos.y<cam_y+17-ui_h)
   end,
 
 })
@@ -198,8 +199,8 @@ creature=entity:inherit({
   end,
 
   -- draw creature
-  draw=function(self)
-    if (self:in_frame()) then
+  draw=function(self,offset)
+    if (self:in_frame(offset)) then
       sprite=self.sprite+frame*16
       if (self.anim_frame<=0) then
         if (self.dead) then sprite=((frame==1 and (turn-self.dhp_turn)<=1 and self.blink_delay<=0 and not creature.anim_playing) and sprite_void) or sprite_grave
@@ -208,8 +209,7 @@ creature=entity:inherit({
           if(state==state_game)print(abs(self.dhp),self:screen_pos().x+4-str_width(abs(self.dhp))*0.5,self:screen_pos().y+1,self.dhp<0 and 8 or 11)
         end
       end
-      pos=self:screen_pos()
-      self:vec2_spr(self:screen_pos(),sprite)
+      entity.draw(self,offset,self:screen_pos(),sprite)
       return true
     end
     return false
@@ -335,7 +335,7 @@ creature=entity:inherit({
 -------------------------------------------------------------------------------
 -- player
 -------------------------------------------------------------------------------
-player = creature:new({
+player=creature:new({
   -- static vars
   class="player",
   parent_class=creature.class,
@@ -457,7 +457,6 @@ door=entity:inherit({
   -- constructor
   new=function(self,tbl)
     if(tbl.lock) then
-      tbl["name"]="locked door"
       if (tbl.lock>0) then
         for d in all(data_locks.doors) do if(d.x==tbl.x and d.y==tbl.y)then tbl.lock=d.lock or 1 break end end
         key.set_variant(tbl,tbl.lock)
@@ -473,6 +472,7 @@ door=entity:inherit({
       tbl.text=(self.collision and "open") or "close"
     else
       tbl.text="unlock"
+      tbl.name="locked "..tbl.name
       if (tbl.usable) then
         tbl.usable=false
         for itm in all(inventory.items) do if(itm.class==key.class and itm.lock==e.lock) then tbl_merge(tbl,{usable=true,possession=itm}) break end end
@@ -615,8 +615,8 @@ chest=entity:inherit({
   item_anim_pos=function(self, anim_pos, target) return {x=lerp(anim_pos+sin(anim_pos*-0.5)*0.75,pos_to_screen(self).x,target.x),y=lerp(anim_pos+cos(anim_pos*0.9+0.1)*0.3-0.3,pos_to_screen(self).y,target.y)} end,
 
   -- draw chest
-  draw=function(self)
-    if (entity.draw(self) and (self.anim_this)) then
+  draw=function(self,offset)
+    if (entity.draw(self,offset) and (self.anim_this)) then
       x,y=pos_to_screen(self).x,pos_to_screen(self).y
       draw_lid=true
       if(self.anim_frame<30)draw_lid=(self.anim_frame>10 and blink) or false
@@ -722,7 +722,7 @@ key=possession:inherit({
       tbl["pal_swap_enable"]=true
       tbl["pal_swap"]={[key.colors[1][2]]=key.colors[i][2],[key.colors[1][3]]=key.colors[i][3]}
     end
-    tbl.name=key.colors[i][1].." key"
+    if(entity.entity_name(tbl)=="key")tbl.name=key.colors[i][1].." key"
   end,
 })
 

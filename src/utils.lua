@@ -69,14 +69,32 @@ function wavy(i,h,s,o)
   return sin(t()*(s or 1.25)+(i or 1)*(o or 0.06))*(h or 3)
 end
 
+-- change palette (if not locked)
+function pal_set(param,lock)
+  if(not pal_lock) then
+    pal_lock=lock or false
+    pal(param)
+  end
+end
+
 -- change all colors (except black)
-function pal_all(c)
-  pal({0,c,c,c,c,c,c,c,c,c,c,c,c,c,c})
+function pal_all(c,lock)
+  pal_set({0,c,c,c,c,c,c,c,c,c,c,c,c,c,c},lock or false)
+end
+
+-- unlock and reset palette
+function pal_unlock()
+  pal_lock=false
+  pal()
 end
 
 -- add two 2d vectors
 function vec2_add(a,b)
   return {x=a.x+b.x,y=a.y+b.y}
+end
+
+function vec2_scale(a,b)
+  return {x=a.x*b,y=a.y*b}
 end
 
 -- draw sprite with 2d vector screen coordinate

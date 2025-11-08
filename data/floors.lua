@@ -5,11 +5,15 @@ data_floors={
   rooms={
     [1]={z=1,x0=103,y0=0,x1=108,y1=6},
     [2]={z=1,x0=109,y0=0,x1=118,y1=7},
+    [3]={z=-1,x0=119,y0=0,x1=127,y1=7},
   },
   stairs={
     [1]={x=3,y=16,room=nil,target=2},
     [2]={x=104,y=1,room=1,target=1},
     [3]={x=16,y=21,room=nil,target=4},
     [4]={x=110,y=1,room=2,target=3},
+
+    [5]={x=23,y=24,room=nil,target=6},
+    [6]={x=120,y=1,room=3,target=5},
   },
 }

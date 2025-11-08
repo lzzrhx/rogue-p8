@@ -54,6 +54,7 @@ flash_frame=0
 fade_frame=0
 fade_chars={"░","▒"}
 fade_action=nil
+pal_lock=false -- lock palette setting
 cam_x=0 -- camera x position
 cam_y=0 -- camera y position
 cam_offset=4 -- camera scroll offset
@@ -214,7 +215,7 @@ draw={
     poke(0x5f54,0x60)
     pal_all(c)
     sspr(0,0,128,128,0,0)
-    pal()
+    pal_set()
     -- reset spritesheet
     poke(0x5f54,0x00)
   end,
@@ -259,9 +260,10 @@ draw={
     update_camera()
     if(room) then
       if (room.z>0) then
-        pal_all(1)
+        pal_all(1,true)
         map(cam_x-1-cam_x_diff,cam_y-1-cam_y_diff-(room.z),-8,-8,18,18-ui_h)
-        pal()
+        for e in all(entity.entities) do e:draw({x=cam_x_diff,y=cam_y_diff+room.z}) end
+        pal_unlock()
       end
       x0=max(0,(room.x0-cam_x+1)*8)
       y0=max(0,(room.y0-cam_y+1)*8)
@@ -400,7 +402,7 @@ draw={
               if(blink)vec2_spr(itm.sprite,pos)
             end
             -- reset palette and decrement animation frame
-            pal()
+            pal_set()
             sel_chest.anim_frame[i]-=1
             -- flash the screen and set chest animation to finished after last item animation is done
             if (sel_chest.anim_frame[num_itms]<=0) then 
@@ -481,12 +483,12 @@ input={
   game=function()
     valid = false
     x,y=player.x,player.y
-    if(btnp(⬆️))valid=player:action_dir(x,y-1)
-    if(btnp(➡️))valid=player:action_dir(x+1,y)
-    if(btnp(⬇️))valid=player:action_dir(x,y+1)
-    if(btnp(⬅️))valid=player:action_dir(x-1,y)
-    if(btnp(🅾️))change_state(state_menu)
-    if(btnp(❎))change_state(state_look)
+    if (btn(⬆️)) then valid=player:action_dir(x,y-1)
+    elseif (btn(➡️)) then valid=player:action_dir(x+1,y)
+    elseif (btn(⬇️)) then valid=player:action_dir(x,y+1)
+    elseif (btn(⬅️)) then valid=player:action_dir(x-1,y)
+    elseif (btnp(🅾️)) then change_state(state_menu)
+    elseif (btnp(❎)) then change_state(state_look) end
     return valid
   end,
 
